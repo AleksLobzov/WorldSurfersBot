@@ -17,7 +17,7 @@ speaker_evaluation_params = {'Preparation (research, organization, rehearsal)',
                              'Manner (confidence, assurance, sincerity, enthusiasm)',
                              'Physical actions (gestures, body movements, eye contact, facial expression)'}
 
-table_topics_participants = {}
+table_topics_participants = []
 
 meeting_evaluation_params = {'Toastmaster',
                              'Thought/Joke of the day',
