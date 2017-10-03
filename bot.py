@@ -45,11 +45,11 @@ def main():
                 if state == 0:
                     if text == '/reset':
                         user_dict.clear()
-                    if text == '/addttspkr':
+                    elif text == '/addttspkr':
                         user_dict[from_id].state = 4
                         response_text = 'You are going to add TT speaker.\n' \
-                                        'Enter his name'
-                    if text == '/survey1':
+                                        'Enter his name:'
+                    elif text == '/survey1':
                         user_dict[from_id].state = 1
                         response_text = 'You are going to evaluate a speaker.\n' \
                                         '/continue'
@@ -65,7 +65,7 @@ def main():
                             user_dict[from_id].meeting_feedback_form[item] = '0'
                         response_text = 'You are going to evaluate the meeting.\n' \
                                         'For every parameter choose one of the following grades:\n'
-                        response_text += ',\n'.join(str(item) for item in config.meeting_evaluation_grades)
+                        response_text += ',\n'.join(str(item) for item in sorted(config.meeting_evaluation_grades, reverse = True))
                         response_text += '\n/continue'
                     elif text == '/result1':
                         response_text = 'Speaker evaluation is not available.\n' \
@@ -142,9 +142,11 @@ def fill_meeting_feedback_form(respondent, text):
 
 # add table topics speaker
 def add_table_topics_speaker(administrator, text):
-    administrator.state == 0
+    administrator.state = 0
     config.table_topics_participants.add(text)
-    return 'Speaker ' + text + ' is added'
+    return 'Speaker ' + text + ' is added\n' \
+           '/continue'
+
 
 # get table topics result
 def get_table_topics_result():
@@ -155,7 +157,9 @@ def get_table_topics_result():
             if value.table_topics_ballot == participant:
                 result[participant] += 1
     print(result)
-    return ', '.join(str(key) + ': ' + str(value) for key, value in result.items())
+    result = ',\n'.join(str(key) + ': ' + str(value) for key, value in result.items())
+    result += '\n/continue'
+    return result
 
 
 # get meeting evaluation result
@@ -174,11 +178,15 @@ def get_meeting_evaluation_result():
                     grades.append(int(participant.meeting_feedback_form[param]))
                 result[param] = sum(grades) / length
             print(result)
-            return ', '.join(str(key) + ': ' + str(value) for key, value in result.items())
+            result = ',\n'.join(str(key) + ': ' + str(value) for key, value in result.items())
+            result += '\n/continue'
+            return result
         except KeyError:
-            return 'There is not filled meeting evaluation forms found'
+            return 'There is not filled meeting evaluation forms found\n' \
+                   '/continue'
     else:
-        return 'Nobody provided meeting feedback'
+        return 'Nobody provided meeting feedback\n' \
+               '/continue'
 
 
 if __name__ == '__main__':
