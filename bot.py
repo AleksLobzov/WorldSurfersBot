@@ -45,6 +45,10 @@ def main():
                 if state == 0:
                     if text == '/reset':
                         user_dict.clear()
+                    if text == '/addttspkr':
+                        user_dict[from_id].state = 4
+                        response_text = 'You are going to add TT speaker.\n' \
+                                        'Enter his name'
                     if text == '/survey1':
                         user_dict[from_id].state = 1
                         response_text = 'You are going to evaluate a speaker.\n' \
@@ -80,8 +84,10 @@ def main():
                                     '/continue'
                 elif state == 2:
                     response_text = fill_table_topics_ballot(user_dict[from_id], text)
-                else:
+                elif state == 3:
                     response_text = fill_meeting_feedback_form(user_dict[from_id], text)
+                else:
+                    response_text = add_table_topics_speaker(user_dict[from_id], text)
 
                 # send last message
                 ws_bot.send_message(chat_id, response_text)
@@ -134,6 +140,12 @@ def fill_meeting_feedback_form(respondent, text):
         return 'You should complete meeting evaluation. Please, enter /continue'
 
 
+# add table topics speaker
+def add_table_topics_speaker(administrator, text):
+    administrator.state == 0
+    config.table_topics_participants.add(text)
+    return ' '.join('Speaker', text, 'is added')
+
 # get table topics result
 def get_table_topics_result():
     result = {}
@@ -159,9 +171,6 @@ def get_meeting_evaluation_result():
             for param in config.meeting_evaluation_params:
                 grades = []
                 for participant in participants.values():
-                    print(participant)
-                    print(param)
-                    print(participant.meeting_feedback_form[param])
                     grades.append(int(participant.meeting_feedback_form[param]))
                 result[param] = sum(grades) / length
             print(result)
