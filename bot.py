@@ -45,6 +45,7 @@ def main():
                 if state == 0:
                     if text == '/reset':
                         user_dict.clear()
+                        del config.table_topics_participants[:]
                     elif text == '/addttspkr':
                         user_dict[from_id].state = 4
                         response_text = 'You are going to add TT speaker.\n' \
