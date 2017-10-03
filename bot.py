@@ -144,7 +144,7 @@ def fill_meeting_feedback_form(respondent, text):
 def add_table_topics_speaker(administrator, text):
     administrator.state == 0
     config.table_topics_participants.add(text)
-    return ' '.join('Speaker', text, 'is added')
+    return 'Speaker ' + text + ' is added'
 
 # get table topics result
 def get_table_topics_result():
