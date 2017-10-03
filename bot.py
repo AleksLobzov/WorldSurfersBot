@@ -143,7 +143,7 @@ def fill_meeting_feedback_form(respondent, text):
 # add table topics speaker
 def add_table_topics_speaker(administrator, text):
     administrator.state = 0
-    config.table_topics_participants.add(text)
+    config.table_topics_participants.append(text)
     return 'Speaker ' + text + ' is added\n' \
            '/continue'
 
