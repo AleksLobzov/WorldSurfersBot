@@ -27,7 +27,10 @@ def main():
             # create unique user dictionary with their last messages
             message_dict = {}
             for item in messages:
-                message_dict[item['message']['from']['id']] = item
+                try:
+                    message_dict[item['message']['from']['id']] = item
+                except KeyError:
+                    message_dict[item['edited_message']['from']['id']] = item
 
             for from_id, message in message_dict.items():
 
