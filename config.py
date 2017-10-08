@@ -19,18 +19,20 @@ speaker_evaluation_params = {'Preparation (research, organization, rehearsal)',
 
 table_topics_participants = []
 
-meeting_evaluation_params = {'Toastmaster',
-                             'Thought/Joke of the day',
-                             'Grammarian / Word of the day',
-                             'Ah-counter',
-                             'Timer',
-                             'Table Topic',
-                             'Speaker 1',
-                             'Speaker 2',
-                             'General Evaluator',
-                             'Evaluator 1',
-                             'Evaluator 2',
-                             'Meeting as a whole'}
+meeting_evaluation_params = {'01. Toastmaster',
+                             '02. Thought/Joke of the day',
+                             '03. Grammarian / Word of the day',
+                             '04. Ah-counter',
+                             '05. Timer',
+                             '06. Table Topic',
+                             '07. Speaker 1',
+                             '08. Speaker 2',
+                             '09. Speaker 3',
+                             '10. General Evaluator',
+                             '11. Evaluator 1',
+                             '12. Evaluator 2',
+                             '13. Evaluator 3',
+                             '14. Meeting as a whole'}
 
 meeting_evaluation_grades = {'5 - Outstanding',
                              '4 - Good job!',

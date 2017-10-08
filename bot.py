@@ -3,6 +3,7 @@
 import bot_handler
 import user
 import config
+import collections
 
 
 ws_bot = bot_handler.BotHandler(config.token)
@@ -67,6 +68,7 @@ def main():
                         user_dict[from_id].state = 3
                         for item in config.meeting_evaluation_params:
                             user_dict[from_id].meeting_feedback_form[item] = '0'
+                        user_dict[from_id].meeting_feedback_form = collections.OrderedDict(sorted(user_dict[from_id].meeting_feedback_form.items()))
                         response_text = 'You are going to evaluate the meeting.\n' \
                                         'For every parameter choose one of the following grades:\n'
                         response_text += ',\n'.join(str(item) for item in sorted(config.meeting_evaluation_grades, reverse = True))
@@ -104,16 +106,21 @@ def main():
 
 # filling table topics ballot
 def fill_table_topics_ballot(voter, text):
-    if text in config.table_topics_participants:
-        try:
-            voter.table_topics_ballot = text
-            voter.state = 0
-            return 'Congratulations! You voted successfully.\n' \
-                   '/continue'
-        except TypeError:
-            raise AssertionError('Input variable should be User')
+    if config.table_topics_participants is None:
+        if text in config.table_topics_participants:
+            try:
+                voter.table_topics_ballot = text
+                voter.state = 0
+                return 'Congratulations! You voted successfully.\n' \
+                       '/continue'
+            except TypeError:
+                raise AssertionError('Input variable should be User')
+        else:
+            return 'You have entered the wrong name. Type the correct one'
     else:
-        return 'You have entered the wrong name. Type the correct one'
+        voter.state = 0
+        return 'TT participants are not defined\n' \
+               '/continue'
 
 
 # filling meeting feedback form
@@ -121,19 +128,21 @@ def fill_meeting_feedback_form(respondent, text):
     if text == '/continue':
         try:
             evaluated_parameter = list(respondent.meeting_feedback_form.keys())[list(respondent.meeting_feedback_form.values()).index('0')]
-            return evaluated_parameter
+            return evaluated_parameter + '\n/2 /3 /4 /5'
         except ValueError:
             respondent.state = 0
             return 'Meeting evaluation is over. Thank you!\n' \
                    '/continue'
         except TypeError:
             raise AssertionError('Input variable should be User')
-    elif text in ('2', '3', '4', '5'):
+    elif text in ('2', '3', '4', '5', '/2', '/3', '/4', '/5'):
         try:
             evaluated_parameter = list(respondent.meeting_feedback_form.keys())[list(respondent.meeting_feedback_form.values()).index('0')]
+            if text[0] == '/':
+                text = text[1:]
             respondent.meeting_feedback_form[evaluated_parameter] = text
             evaluated_parameter = list(respondent.meeting_feedback_form.keys())[list(respondent.meeting_feedback_form.values()).index('0')]
-            return evaluated_parameter
+            return evaluated_parameter + '\n/2 /3 /4 /5'
         except ValueError:
             respondent.state = 0
             return 'Meeting evaluation is over. Thank you!\n' \
@@ -162,6 +171,8 @@ def get_table_topics_result():
                 result[participant] += 1
     print(result)
     result = ',\n'.join(str(key) + ': ' + str(value) for key, value in result.items())
+    if result is None:
+        result = 'Nobody voted for a TT winner'
     result += '\n/continue'
     return result
 
@@ -181,6 +192,7 @@ def get_meeting_evaluation_result():
                 for participant in participants.values():
                     grades.append(int(participant.meeting_feedback_form[param]))
                 result[param] = sum(grades) / length
+            result = collections.OrderedDict(sorted(result.items()))
             print(result)
             result = ',\n'.join(str(key) + ': ' + str(value) for key, value in result.items())
             result += '\n/continue'
