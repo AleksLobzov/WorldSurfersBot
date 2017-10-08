@@ -54,6 +54,11 @@ def main():
                         user_dict[from_id].state = 4
                         response_text = 'You are going to add TT speaker.\n' \
                                         'Enter his name:'
+                    elif text == '/delttspkr':
+                        user_dict[from_id].state = 5
+                        response_text = 'You are going to delete TT speaker.\n' \
+                                        'Choose one by entering her name.\n'
+                        response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
                     elif text == '/survey1':
                         user_dict[from_id].state = 1
                         response_text = 'You are going to evaluate a speaker.\n' \
@@ -92,8 +97,10 @@ def main():
                     response_text = fill_table_topics_ballot(user_dict[from_id], text)
                 elif state == 3:
                     response_text = fill_meeting_feedback_form(user_dict[from_id], text)
-                else:
+                elif state == 4:
                     response_text = add_table_topics_speaker(user_dict[from_id], text)
+                else:
+                    response_text = remove_table_topics_speaker(user_dict[from_id], text)
 
                 # send last message
                 ws_bot.send_message(chat_id, response_text)
@@ -106,7 +113,7 @@ def main():
 
 # filling table topics ballot
 def fill_table_topics_ballot(voter, text):
-    if config.table_topics_participants is None:
+    if len(config.table_topics_participants) > 0:
         if text in config.table_topics_participants:
             try:
                 voter.table_topics_ballot = text
@@ -156,9 +163,41 @@ def fill_meeting_feedback_form(respondent, text):
 # add table topics speaker
 def add_table_topics_speaker(administrator, text):
     administrator.state = 0
-    config.table_topics_participants.append(text)
-    return 'Speaker ' + text + ' is added\n' \
-           '/continue'
+    is_added = False
+    for item in config.table_topics_participants:
+        if text == item:
+            is_added = True
+    result = ''
+    if is_added:
+        result = 'Speaker ' + text + ' is already in the TT participants list\n' \
+                 '/continue'
+    else:
+        config.table_topics_participants.append(text)
+        result = 'Speaker ' + text + ' is added\n' \
+                 '/continue'
+    return result
+
+
+# remove table topics speaker
+def remove_table_topics_speaker(administrator, text):
+    administrator.state = 0
+    is_added = False
+    for item in config.table_topics_participants:
+        if text == item:
+            is_added = True
+    result = ''
+    if is_added:
+        try:
+            config.table_topics_participants.remove(text)
+            result = 'Speaker ' + text + ' is deleted\n' \
+                     '/continue'
+        except ValueError:
+            result = 'Speaker ' + text + ' is already deleted by someone else\n' \
+                     '/continue'
+    else:
+        result = 'Speaker ' + text + ' is not in the TT participants list\n' \
+                 '/continue'
+    return result
 
 
 # get table topics result

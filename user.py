@@ -10,7 +10,8 @@ class User:
         # 1 - do speaker evaluation;
         # 2 - choose TT winner;
         # 3 - do meeting evaluation;
-        # 4 - add TT speaker
+        # 4 - add TT speaker;
+        # 5 - remove TT speaker
         self.state = 0
 
         # dictionary of dictionaries.
