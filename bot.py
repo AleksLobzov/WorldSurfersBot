@@ -31,81 +31,87 @@ def main():
                 try:
                     message_dict[item['message']['from']['id']] = item
                 except KeyError:
-                    message_dict[item['edited_message']['from']['id']] = item
+                    print('Invalid message type')
 
             for from_id, message in message_dict.items():
 
-                # get last message
-                chat_id = message['message']['chat']['id']
-                text = message['message']['text']
+                try:
 
-                # get last user and remember her
-                if from_id not in user_dict:
-                    user_dict[from_id] = user.User(from_id)
+                    # get last message
+                    chat_id = message['message']['chat']['id']
+                    text = message['message']['text']
 
-                # get response text
-                response_text = ''
-                state = user_dict[from_id].state
-                if state == 0:
-                    if text == '/reset':
-                        user_dict.clear()
-                        del config.table_topics_participants[:]
-                    elif text == '/addttspkr':
-                        user_dict[from_id].state = 4
-                        response_text = 'You are going to add TT speaker.\n' \
-                                        'Enter his name:'
-                    elif text == '/delttspkr':
-                        user_dict[from_id].state = 5
-                        response_text = 'You are going to delete TT speaker.\n' \
-                                        'Choose one by entering her name.\n'
-                        response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
-                    elif text == '/survey1':
-                        user_dict[from_id].state = 1
-                        response_text = 'You are going to evaluate a speaker.\n' \
-                                        '/continue'
-                    elif text == '/survey2':
-                        user_dict[from_id].state = 2
-                        user_dict[from_id].table_topics_ballot = ''
-                        response_text = 'You are going to vote for TT winner.\n' \
-                                        'Choose one by entering her name.\n'
-                        response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
-                    elif text == '/survey3':
-                        user_dict[from_id].state = 3
-                        for item in config.meeting_evaluation_params:
-                            user_dict[from_id].meeting_feedback_form[item] = '0'
-                        user_dict[from_id].meeting_feedback_form = collections.OrderedDict(sorted(user_dict[from_id].meeting_feedback_form.items()))
-                        response_text = 'You are going to evaluate the meeting.\n' \
-                                        'For every parameter choose one of the following grades:\n'
-                        response_text += ',\n'.join(str(item) for item in sorted(config.meeting_evaluation_grades, reverse = True))
-                        response_text += '\n/continue'
-                    elif text == '/result1':
+                    # get last user and remember her
+                    if from_id not in user_dict:
+                        user_dict[from_id] = user.User(from_id)
+
+                    # get response text
+                    response_text = ''
+                    state = user_dict[from_id].state
+                    if state == 0:
+                        if text == '/reset':
+                            user_dict.clear()
+                            del config.table_topics_participants[:]
+                        elif text == '/addttspkr':
+                            user_dict[from_id].state = 4
+                            response_text = 'You are going to add TT speaker.\n' \
+                                            'Enter his name:'
+                        elif text == '/delttspkr':
+                            user_dict[from_id].state = 5
+                            response_text = 'You are going to delete TT speaker.\n' \
+                                            'Choose one by entering her name.\n'
+                            response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
+                        elif text == '/survey1':
+                            user_dict[from_id].state = 1
+                            response_text = 'You are going to evaluate a speaker.\n' \
+                                            '/continue'
+                        elif text == '/survey2':
+                            user_dict[from_id].state = 2
+                            user_dict[from_id].table_topics_ballot = ''
+                            response_text = 'You are going to vote for TT winner.\n' \
+                                            'Choose one by entering her name.\n'
+                            response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
+                        elif text == '/survey3':
+                            user_dict[from_id].state = 3
+                            for item in config.meeting_evaluation_params:
+                                user_dict[from_id].meeting_feedback_form[item] = '0'
+                            user_dict[from_id].meeting_feedback_form = collections.OrderedDict(sorted(user_dict[from_id].meeting_feedback_form.items()))
+                            response_text = 'You are going to evaluate the meeting.\n' \
+                                            'For every parameter choose one of the following grades:\n'
+                            response_text += ',\n'.join(str(item) for item in sorted(config.meeting_evaluation_grades, reverse = True))
+                            response_text += '\n/continue'
+                        elif text == '/result1':
+                            response_text = 'Speaker evaluation is not available.\n' \
+                                            '/continue'
+                        elif text == '/result2':
+                            response_text = get_table_topics_result()
+                        elif text == '/result3':
+                            response_text = get_meeting_evaluation_result()
+                        else:
+                            response_text = 'Enter /survey1 for speaker evaluation.\n' \
+                                            'Enter /survey2 for TT winner voting.\n' \
+                                            'Enter /survey3 for meeting evaluation.'
+                    elif state == 1:
+                        user_dict[from_id].state = 0
                         response_text = 'Speaker evaluation is not available.\n' \
                                         '/continue'
-                    elif text == '/result2':
-                        response_text = get_table_topics_result()
-                    elif text == '/result3':
-                        response_text = get_meeting_evaluation_result()
+                    elif state == 2:
+                        response_text = fill_table_topics_ballot(user_dict[from_id], text)
+                        ws_bot.send_message(239687202, str(239687202) + ' voted for ' + text)
+                    elif state == 3:
+                        response_text = fill_meeting_feedback_form(user_dict[from_id], text)
+                    elif state == 4:
+                        response_text = add_table_topics_speaker(user_dict[from_id], text)
                     else:
-                        response_text = 'Enter /survey1 for speaker evaluation.\n' \
-                                        'Enter /survey2 for TT winner voting.\n' \
-                                        'Enter /survey3 for meeting evaluation.'
-                elif state == 1:
-                    user_dict[from_id].state = 0
-                    response_text = 'Speaker evaluation is not available.\n' \
-                                    '/continue'
-                elif state == 2:
-                    response_text = fill_table_topics_ballot(user_dict[from_id], text)
-                elif state == 3:
-                    response_text = fill_meeting_feedback_form(user_dict[from_id], text)
-                elif state == 4:
-                    response_text = add_table_topics_speaker(user_dict[from_id], text)
-                else:
-                    response_text = remove_table_topics_speaker(user_dict[from_id], text)
+                        response_text = remove_table_topics_speaker(user_dict[from_id], text)
 
-                # send last message
-                ws_bot.send_message(chat_id, response_text)
+                    # send last message
+                    ws_bot.send_message(chat_id, response_text)
 
-            new_offset = last_update_id + 1
+                    new_offset = last_update_id + 1
+
+                except KeyError:
+                    print('Invalid content type')
 
         except IndexError:
             print('There is not new messages in getUpdates()')
@@ -208,7 +214,6 @@ def get_table_topics_result():
         for value in user_dict.values():
             if value.table_topics_ballot == participant:
                 result[participant] += 1
-    print(result)
     result = ',\n'.join(str(key) + ': ' + str(value) for key, value in result.items())
     if result is None:
         result = 'Nobody voted for a TT winner'
