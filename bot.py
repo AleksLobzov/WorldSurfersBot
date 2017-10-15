@@ -1,12 +1,14 @@
 # bot logic implementation
 
 import bot_handler
+import translator
 import user
 import config
 import collections
 
 
 ws_bot = bot_handler.BotHandler(config.token)
+ws_translator = translator.Translator(config.key)
 
 user_dict = {}
 
@@ -61,6 +63,10 @@ def main():
                             response_text = 'You are going to delete TT speaker.\n' \
                                             'Choose one by entering her name.\n'
                             response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
+                        elif text == '/setlang':
+                            user_dict[from_id].state = 6
+                            response_text = 'Choose the new bot language.\n' \
+                                            '/en /es /ru'
                         elif text == '/survey1':
                             user_dict[from_id].state = 1
                             response_text = 'You are going to evaluate a speaker.\n' \
@@ -88,9 +94,9 @@ def main():
                         elif text == '/result3':
                             response_text = get_meeting_evaluation_result()
                         else:
-                            response_text = 'Enter /survey1 for speaker evaluation.\n' \
-                                            'Enter /survey2 for TT winner voting.\n' \
-                                            'Enter /survey3 for meeting evaluation.'
+                            response_text = 'Choose /survey1 to evaluate a Speaker.\n' \
+                                            'Choose /survey2 to vote for a TT winner.\n' \
+                                            'Choose /survey3 to evaluate a meeting.'
                     elif state == 1:
                         user_dict[from_id].state = 0
                         response_text = 'Speaker evaluation is not available.\n' \
@@ -102,11 +108,13 @@ def main():
                         response_text = fill_meeting_feedback_form(user_dict[from_id], text)
                     elif state == 4:
                         response_text = add_table_topics_speaker(user_dict[from_id], text)
-                    else:
+                    elif state == 4:
                         response_text = remove_table_topics_speaker(user_dict[from_id], text)
+                    else:
+                        response_text = set_language(user_dict[from_id], text)
 
                     # send last message
-                    ws_bot.send_message(chat_id, response_text)
+                    ws_bot.send_message(chat_id, translate_message(response_text))
 
                     new_offset = last_update_id + 1
 
@@ -138,7 +146,7 @@ def fill_table_topics_ballot(voter, text):
 
 # filling meeting feedback form
 def fill_meeting_feedback_form(respondent, text):
-    if text == '/continue':
+    if text == translate_message('/continue')[0].encode('UTF-8'):
         try:
             evaluated_parameter = list(respondent.meeting_feedback_form.keys())[list(respondent.meeting_feedback_form.values()).index('0')]
             return evaluated_parameter + '\n/2 /3 /4 /5'
@@ -247,6 +255,27 @@ def get_meeting_evaluation_result():
     else:
         return 'Nobody provided meeting feedback\n' \
                '/continue'
+
+
+# set bot language
+def set_language(administrator, text):
+    administrator.state = 0
+    if text in ('es', '/es'):
+        config.lang = 'es'
+    elif text in ('ru', '/ru'):
+        config.lang = 'ru'
+    else:
+        config.lang = 'en'
+    return 'Language is changed to ' + config.lang + '\n' \
+           '/continue'
+
+
+# translate response
+def translate_message(text):
+    if config.lang == 'en':
+        return text
+    else:
+        return ws_translator.translate_text(text, config.lang)
 
 
 if __name__ == '__main__':

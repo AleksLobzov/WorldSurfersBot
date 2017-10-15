@@ -12,6 +12,7 @@ class User:
         # 3 - do meeting evaluation;
         # 4 - add TT speaker;
         # 5 - remove TT speaker
+        # 6 - set language
         self.state = 0
 
         # dictionary of dictionaries.

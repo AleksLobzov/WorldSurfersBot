@@ -4,6 +4,9 @@ link = 't.me/WorldSurfersBot'
 token = '470183467:AAERn5dFBz2DKp1LzCVBq_zpOCH_AuGrKtg'
 timeout = 30
 
+key = 'trnsl.1.1.20170824T134259Z.5a355013f60b48ae.77c5eb7608bdfac19ed8fa5dff1f17132a1a8b64'
+lang = 'en'
+
 speaker_evaluation_params = {'Preparation (research, organization, rehearsal)',
                              'Speech Value (original, interesting)',
                              'Manual Assignment (met project objectives)',

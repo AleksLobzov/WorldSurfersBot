@@ -1,5 +1,4 @@
 # bot handler implementation
-
 import requests
 
 
