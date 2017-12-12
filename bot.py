@@ -1,14 +1,12 @@
 # bot logic implementation
 
 import bot_handler
-import translator
 import user
 import config
 import collections
 
 
 ws_bot = bot_handler.BotHandler(config.token)
-ws_translator = translator.Translator(config.key)
 
 user_dict = {}
 
@@ -63,10 +61,6 @@ def main():
                             response_text = 'You are going to delete TT speaker.\n' \
                                             'Choose one by entering her name.\n'
                             response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
-                        elif text == '/setlang':
-                            user_dict[from_id].state = 6
-                            response_text = 'Choose the new bot language.\n' \
-                                            '/en /es /ru'
                         elif text == '/survey1':
                             user_dict[from_id].state = 1
                             response_text = 'You are going to evaluate a speaker.\n' \
@@ -75,8 +69,8 @@ def main():
                             user_dict[from_id].state = 2
                             user_dict[from_id].table_topics_ballot = ''
                             response_text = 'You are going to vote for TT winner.\n' \
-                                            'Choose one by entering her name.\n'
-                            response_text += ',\n'.join(str(item) for item in config.table_topics_participants)
+                                            'Choose one by entering her name.\n/'
+                            response_text += ',\n/'.join(str(item) for item in config.table_topics_participants)
                         elif text == '/survey3':
                             user_dict[from_id].state = 3
                             for item in config.meeting_evaluation_params:
@@ -103,18 +97,17 @@ def main():
                                         '/continue'
                     elif state == 2:
                         response_text = fill_table_topics_ballot(user_dict[from_id], text)
-                        ws_bot.send_message(239687202, str(239687202) + ' voted for ' + text)
+                        ws_bot.send_message(239687202, str(chat_id) + ' voted for ' + text)
                     elif state == 3:
                         response_text = fill_meeting_feedback_form(user_dict[from_id], text)
+                        ws_bot.send_message(239687202, str(chat_id) + ' gives ' + text)
                     elif state == 4:
                         response_text = add_table_topics_speaker(user_dict[from_id], text)
-                    elif state == 4:
-                        response_text = remove_table_topics_speaker(user_dict[from_id], text)
                     else:
-                        response_text = set_language(user_dict[from_id], text)
+                        response_text = remove_table_topics_speaker(user_dict[from_id], text)
 
                     # send last message
-                    ws_bot.send_message(chat_id, translate_message(response_text))
+                    ws_bot.send_message(chat_id, response_text)
 
                     new_offset = last_update_id + 1
 
@@ -128,6 +121,8 @@ def main():
 # filling table topics ballot
 def fill_table_topics_ballot(voter, text):
     if len(config.table_topics_participants) > 0:
+        if text[0] == '/':
+            text = text[1:]
         if text in config.table_topics_participants:
             try:
                 voter.table_topics_ballot = text
@@ -146,7 +141,7 @@ def fill_table_topics_ballot(voter, text):
 
 # filling meeting feedback form
 def fill_meeting_feedback_form(respondent, text):
-    if text == translate_message('/continue')[0].encode('UTF-8'):
+    if text == '/continue':
         try:
             evaluated_parameter = list(respondent.meeting_feedback_form.keys())[list(respondent.meeting_feedback_form.values()).index('0')]
             return evaluated_parameter + '\n/2 /3 /4 /5'
@@ -268,14 +263,6 @@ def set_language(administrator, text):
         config.lang = 'en'
     return 'Language is changed to ' + config.lang + '\n' \
            '/continue'
-
-
-# translate response
-def translate_message(text):
-    if config.lang == 'en':
-        return text
-    else:
-        return ws_translator.translate_text(text, config.lang)
 
 
 if __name__ == '__main__':
